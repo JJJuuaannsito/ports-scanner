@@ -95,28 +95,6 @@ python main.py --help
 
 ---
 
-## help 📄 Example Output
-
-╭──── Port Scanner ────╮
-│ Target: scanme.nmap.org │
-│ Ports: 1000 │
-│ Threads: 50 │
-│ Timeout: 2.0s │
-╰─────────────────────────╯
-
-              Open Ports
-
-┏━━━━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Port ┃ Proto ┃ Service ┃ Info ┃
-┡━━━━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ 22 │ tcp │ ssh │ SSH-2.0-OpenSSH... │
-│ 80 │ tcp │ http │ HTTP/1.1 200 OK ... │
-└──────┴───────┴─────────┴──────────────────────┘
-
-Scan finished in 2.31s — 2 open port(s) found.
-
----
-
 ## ⚠️ Disclaimer
 
 This tool is for educational purposes only.
