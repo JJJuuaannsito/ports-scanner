@@ -32,8 +32,8 @@ It detects open ports, guesses common services, performs basic banner grabbing, 
 Clone the repository:
 
 ```bash
-git clone https://github.com/jjjuuaannsito/port_scanner.git
-cd port_scanner
+git clone https://github.com/jjjuuaannsito/port-git scanner.git
+cd port-scanner
 ```
 
 ---
