@@ -1,7 +1,7 @@
-import argparse
-import json
+import typer
 import socket
 import time
+import json
 
 from rich.console import Console
 from rich.table import Table
@@ -9,11 +9,11 @@ from rich.panel import Panel
 
 from sc.core import scan_range
 
-
+app = typer.Typer(help="Python Port Scanner")
 console = Console()
 
 
-def parse_ports(port_str):
+def parse_ports(port_str: str):
     ports = set()
 
     for part in port_str.split(","):
@@ -69,62 +69,46 @@ def print_results(results):
     console.print(table)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Port Scanner")
-
-    parser.add_argument("host", help="Target host or IP")
-    parser.add_argument(
-        "-p",
-        "--ports",
-        default="1-1024",
-        help="Ports to scan. Example: 22,80,443 or 1-1000",
-    )
-    parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        default=50,
-        help="Number of threads",
-    )
-    parser.add_argument(
-        "--timeout",
-        type=float,
-        default=2,
-        help="Socket timeout in seconds",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        help="Save results as JSON file",
-    )
-
-    args = parser.parse_args()
+# =========================
+# COMMAND: scan
+# =========================
+@app.command()
+def scan(
+    host: str = typer.Argument(..., help="Target host or IP"),
+    ports: str = typer.Option("1-1024", "-p", help="Ports to scan"),
+    threads: int = typer.Option(50, "-t", help="Number of threads"),
+    timeout: float = typer.Option(2, help="Timeout in seconds"),
+    output: str = typer.Option(None, "-o", help="Save results to JSON"),
+):
+    """Scan a host for open ports."""
 
     try:
-        ip = socket.gethostbyname(args.host)
+        ip = socket.gethostbyname(host)
     except socket.error:
         console.print("[red]Invalid host[/red]")
-        return
+        raise typer.Exit()
 
-    ports = parse_ports(args.ports)
+    port_list = parse_ports(ports)
 
     console.print(
         Panel.fit(
-            f"[bold]Target:[/bold] {args.host} ({ip})\n"
-            f"[bold]Ports:[/bold] {len(ports)}\n"
-            f"[bold]Threads:[/bold] {args.threads}\n"
-            f"[bold]Timeout:[/bold] {args.timeout}s",
+            f"[bold]Target:[/bold] {host} ({ip})\n"
+            f"[bold]Ports:[/bold] {len(port_list)}\n"
+            f"[bold]Threads:[/bold] {threads}\n"
+            f"[bold]Timeout:[/bold] {timeout}s",
             title="Port Scanner",
         )
     )
 
     start = time.time()
+
     results = scan_range(
-        args.host,
-        ports,
-        threads=args.threads,
-        timeout=args.timeout,
+        host,
+        port_list,
+        threads=threads,
+        timeout=timeout,
     )
+
     elapsed = time.time() - start
 
     if results:
@@ -133,17 +117,50 @@ def main():
         console.print("[yellow]No open ports found[/yellow]")
 
     console.print(
-        f"\n[green]Scan finished[/green] "
-        f"in {elapsed:.2f}s — "
-        f"{len(results)} open port(s) found."
+        f"\n[green]Scan finished[/green] in {elapsed:.2f}s — {len(results)} open ports."
     )
 
-    if args.output:
-        with open(args.output, "w", encoding="utf-8") as file:
-            json.dump(results, file, indent=2)
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
 
-        console.print(f"[cyan]Results saved to:[/cyan] {args.output}")
+        console.print(f"[cyan]Saved to {output}[/cyan]")
 
 
+# =========================
+# COMMAND: resolve
+# =========================
+@app.command()
+def resolve(
+    host: str = typer.Argument(..., help="Domain or IP to resolve"),
+):
+    """Resolve a domain to IP and reverse DNS."""
+
+    try:
+        ip = socket.gethostbyname(host)
+        console.print(f"[green]IP:[/green] {ip}")
+    except socket.error:
+        console.print("[red]Could not resolve host[/red]")
+        raise typer.Exit()
+
+    try:
+        reverse = socket.gethostbyaddr(ip)[0]
+        console.print(f"[green]Reverse DNS:[/green] {reverse}")
+    except socket.herror:
+        console.print("[yellow]No reverse DNS found[/yellow]")
+
+
+# =========================
+# COMMAND: version
+# =========================
+@app.command()
+def version():
+    """Show tool version."""
+    console.print("[bold cyan]Port Scanner v0.1[/bold cyan]")
+
+
+# =========================
+# ENTRYPOINT
+# =========================
 if __name__ == "__main__":
-    main()
+    app()
